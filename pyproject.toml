@@ -1,0 +1,10 @@
+[project]
+name = "lastfm-reporter"
+version = "0.1.0"
+description = "It's like every other LastFM history tool but this will give me what I want"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "pylast>=5.3.0",
+    "python-dotenv>=1.0.1",
+]
