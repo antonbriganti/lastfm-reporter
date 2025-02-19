@@ -2,6 +2,7 @@ import os
 import pylast
 import re
 import calendar
+import json
 from collections import defaultdict
 from dotenv import load_dotenv
 from datetime import datetime, timezone
@@ -68,11 +69,16 @@ def get_month_history(network, month, year):
     tracks = defaultdict(int)
     
     for week in weeks:
+        print(f"getting week {week}...")
         res = user.get_recent_tracks(time_from=week[0], time_to=week[1], limit=999)
         for it in res:
-            albums[f"{str(it.track.get_artist())} - {it.album}"] += 1
-            artists[str(it.track.get_artist())] += 1
-            tracks[f"{str(it.track.get_artist())} - {it.track.get_name()}"] += 1
+            artist_name = str(it.track.get_artist())
+            album_name = str(it.album)
+            track_name = it.track.get_name()
+
+            albums[f"{artist_name} - {album_name}"] += 1
+            artists[artist_name] += 1
+            tracks[f"{artist_name} - {track_name}"] += 1
     
     return (albums, artists, tracks)
             
@@ -109,5 +115,21 @@ network = pylast.LastFMNetwork(
     password_hash=os.environ.get("PASSWORD_HASH")
 )
 
-history = get_month_history(network, 1, 2025)
-create_top_report(history[0], history[1], history[2])
+print("getting history...")
+while True:
+    try:
+        month = 1
+        year = 2025
+        history = get_month_history(network, 1, 2025)
+
+        with open(f'{month}-{year}-albums-history.json', 'w', encoding='utf-8') as f:
+            json.dump(history[0], f, ensure_ascii=False, indent=4)
+        with open(f'{month}-{year}-tracks-history.json', 'w', encoding='utf-8') as f:
+            json.dump(history[2], f, ensure_ascii=False, indent=4)
+        with open(f'{month}-{year}-artists-history.json', 'w', encoding='utf-8') as f:
+            json.dump(history[1], f, ensure_ascii=False, indent=4)
+
+        create_top_report(history[0], history[1], history[2])
+    except Exception:
+        continue
+    break
